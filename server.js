@@ -1,6 +1,7 @@
-const app = require('express')();
-const http = require('http').Server(app);
-const io = require('socket.io')(http);
+const app = require('http').createServer();
+const io = require('socket.io')(app);
+
+app.listen(5050);
 
 let players = [];
 let activePlayer;
@@ -73,8 +74,8 @@ const gameStatus = () => {
 };
 
 io.on('connection', (socket) => {
-  socket.on('sayHello', (data) => {
-    players.push(data);
+  socket.on('sayHello', (id) => {
+    players.push({ name: `player${io.engine.clientsCount}`, id })
   });
 
   socket.emit('isFirstUser', io.engine.clientsCount);
@@ -137,7 +138,3 @@ io.on('connection', (socket) => {
     console.log('User was disconnected!')
   });
 });
-
-
-
-http.listen(5050);

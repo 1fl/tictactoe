@@ -1,11 +1,9 @@
-const prompt = require('prompt-sync')();
+const readCommand = require('readcommand');
 const io = require('socket.io-client');
 const socket = io.connect('http://localhost:5050');
 
 const webLink = process.argv[2];
 const port = process.argv[3];
-
-const players = [];
 
 if (!webLink && !port) {
   console.log('Please enter web address & port number correctly!');
@@ -15,16 +13,15 @@ if (!webLink && !port) {
   console.log('You can only access to port no 5050');
 } else {
   socket.on('connect', () => {
-    const name = prompt('Enter your name: ');
     const id = socket.io.engine.id;
+    socket.emit('sayHello', id);
 
-    socket.emit('sayHello', { name, id });
     socket.on('isFirstUser', (count) => {
       if (count === 1) {
-        console.log(`${name}, you are first player. Wait for second player to join.`);
+        console.log('You are player1. Wait for player2 to join.');
       } else if (count === 2) {
-        console.log(`${name}, you are second player. Let's begin the game.`);
-        socket.emit('startGame', name);
+        console.log('You are player2. Let\'s begin the game.');
+        socket.emit('startGame');
       } else {
         console.log('Sorry the room is full!');
       }
@@ -36,8 +33,10 @@ if (!webLink && !port) {
 
     socket.on('move', (currentId) => {
       if (currentId === id) {
-        const move = prompt('Please enter 1 to 9 to play: ');
-        socket.emit('play', move);
+        console.log('Please enter 1 to 9 to play: ');
+        readCommand.read((err, args) => {
+          socket.emit('play', args[0]);
+        });
       } else {
         console.log('waiting for another player\'s move!')
       }
